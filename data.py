@@ -228,9 +228,9 @@ class ImageFolderTrain(data.Dataset):
 
         # fake image, different sequences
         seq_A, seq_B = np.random.randint(0, len(self.sequence), 2)
-        env_A = random.randint(0, len(get_subdirectory(self.train_fake_root + '/' + self.sequence[seq_A])))
-        env_A_prime = random.randint(0, len(get_subdirectory(self.train_fake_root + '/' + self.sequence[seq_A])))
-        env_B = random.randint(0, len(get_subdirectory(self.train_fake_root + '/' + self.sequence[seq_B])))
+        env_A = np.random.randint(0, len(get_subdirectory(self.train_fake_root + '/' + self.sequence[seq_A])))
+        env_A_prime = np.random.randint(0, len(get_subdirectory(self.train_fake_root + '/' + self.sequence[seq_A])))
+        env_B = np.random.randint(0, len(get_subdirectory(self.train_fake_root + '/' + self.sequence[seq_B])))
 
         self.rgb_imgs_A = self.all_rgb_paths[seq_A][env_A]
         self.depth_imgs_A = self.all_depth_paths[seq_A][env_A]
@@ -259,13 +259,13 @@ class ImageFolderTrain(data.Dataset):
 
         # find the positive and negative index
         if index < 5:
-            ran_idx = random.randint(1, 5)
+            ran_idx = np.random.randint(1, 6)
             index_prime = index + ran_idx
         elif (len(self.rgb_imgs_A_prime) - index) < 5 :
-            ran_idx = random.randint(1, 5)
+            ran_idx = np.random.randint(1, 6)
             index_prime = index - ran_idx
         else:
-            ran_idx = random.randint(-5, 5)
+            ran_idx = np.random.randint(-5, 6)
             if ran_idx > 0:
                 index_prime = min(index + ran_idx, len(self.rgb_imgs_A_prime) - 1)
             else:
@@ -280,7 +280,7 @@ class ImageFolderTrain(data.Dataset):
         path_seg_A_prime = self.seg_imgs_A_prime[index_prime]
         seg_img_A_prime = self.seg_loader(path_seg_A_prime)
 
-        index_B = random.randint(0, len(self.rgb_imgs_B) - 1)
+        index_B = np.random.randint(0, len(self.rgb_imgs_B))
 
         path_rgb_B = self.rgb_imgs_B[index_B]
         rgb_img_B = self.loader(path_rgb_B)
