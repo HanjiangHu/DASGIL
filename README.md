@@ -25,7 +25,7 @@ git clone https://github.com/HanjiangHu/DASGIL.git
 ### Training
 
 [KITTI](http://www.cvlibs.net/datasets/kitti/index.php) and [Virtual KITTI 2](https://europe.naverlabs.com/research/computer-vision-research-naver-labs-europe/proxy-virtual-worlds-vkitti-2/) dataset are used to train the model, while [Extended CMU-Seasons](https://www.visuallocalization.net/datasets) dataset is used to test.
-The datasets involved in this paper are well organized [HERE](). Please uncompress it under the root path. Our pretrained models are found [HERE](). Please uncompress it under the root path.
+The datasets involved in this paper are well organized [HERE](https://drive.google.com/file/d/10yRZsyfX_Xc2GpY1Gpmv2UeVjCbEPDYD/view?usp=sharing). Please uncompress it under the root path. Our pretrained models are found [HERE](https://drive.google.com/file/d/15yu3I4Tm2AADG881vO0l9DY2AgtVMGmB/view?usp=sharing). Please uncompress it under the root path.
 
 - Training on KITTI and Virtual KITTI Dataset:
 ```
