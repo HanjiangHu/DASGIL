@@ -36,7 +36,7 @@ def get_subdirectory(dir):
         if dir != []:
             subdirectory = dir
             break
-    return subdirectory
+    return sorted(subdirectory)
 
 
 class util():
