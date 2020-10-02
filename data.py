@@ -228,9 +228,9 @@ class ImageFolderTrain(data.Dataset):
 
         # fake image, different sequences
         seq_A, seq_B = np.random.randint(0, len(self.sequence), 2)
-        env_A = random.randint(0, len(self.sequence[seq_A]) - 1)
-        env_A_prime = random.randint(0, len(self.sequence[seq_A]) - 1)
-        env_B = random.randint(0, len(self.sequence[seq_B]) - 1)
+        env_A = random.randint(0, len(self.train_fake_root + '/' + self.sequence[seq_A]))
+        env_A_prime = random.randint(0, len(self.train_fake_root + '/' + self.sequence[seq_A]))
+        env_B = random.randint(0, len(self.train_fake_root + '/' + self.sequence[seq_B]))
 
         self.rgb_imgs_A = self.all_rgb_paths[seq_A][env_A]
         self.depth_imgs_A = self.all_depth_paths[seq_A][env_A]
