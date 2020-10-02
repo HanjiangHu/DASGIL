@@ -45,5 +45,5 @@ class TrainOptions(BaseOptions):
         self.parser.add_argument('--seg_root', type=str,
                                  default='./datasets/vkitti/vkitti_2.0.3_classSegmentation',
                                  help='path to segmentation images of Virtual KITTI dataset')
-        self.parser.add_argument('--data_root_real', type=str, default='./datasets/kitti/trainB',
+        self.parser.add_argument('--data_root_real', type=str, default='./datasets/kitti',
                                  help='path to RGB images of KITTI dataset')
