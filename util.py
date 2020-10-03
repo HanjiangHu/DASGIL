@@ -94,7 +94,8 @@ def tensor2array_rainbow(tensor, max_value=None, colormap='rainbow',seg=False,te
         max_value = tensor.max().item()
     if tensor.ndimension() == 2 or tensor.size(0) == 1:
         norm_array = tensor.squeeze().numpy()/max_value
-        array = (COLORMAPS[colormap](norm_array)*255).astype(np.uint8)#
+        array = (COLORMAPS[colormap](norm_array)*255).astype(np.uint8)
+        array = array.transpose(2,0,1)
 
     elif tensor.ndimension() == 3:
         if not seg:
