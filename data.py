@@ -367,7 +367,7 @@ class ImageFolderTrain(data.Dataset):
         arr_depth[arr_depth < 0.0] = 0.0
         dep_tensor = torch.from_numpy(arr_depth).unsqueeze(0)
 
-        # segmentation map
+        # segmentation map fixme why don't use toTensor
         seg_img_resized = torch.from_numpy(np.array(seg_img_resized)).long()
         seg_img_resized = seg_img_resized.transpose(1,2)
         seg_img_resized = seg_img_resized.transpose(0,1)

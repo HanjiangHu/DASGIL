@@ -31,6 +31,7 @@ class Generator(nn.Module):
         self.deconv3_bn = nn.BatchNorm2d(d * 8)
         self.deconv4 = nn.ConvTranspose2d(d * 8 * 2, d * 8, 4, 2, 1)
         self.deconv4_bn = nn.BatchNorm2d(d * 8)
+
         self.deconv5 = nn.ConvTranspose2d(d * 8 * 2, d * 4, 4, 2, 1)
         self.deconv5_bn = nn.BatchNorm2d(d * 4)
         self.deconv6 = nn.ConvTranspose2d(d * 4 * 2, d * 2, 4, 2, 1)
@@ -94,17 +95,16 @@ class Generator(nn.Module):
         mid_feature.append(e7)
 
         e8 = self.conv8(F.leaky_relu(e7, 0.2))
+        # output mid_feature
         mid_feature.append(e8)
 
         d1_dep = F.dropout(self.deconv1_bn(self.deconv1(F.relu(e8))), 0.5, training=self.opt.isTrain)
-
         d1_dep = torch.cat([d1_dep, e7], 1)
 
         d2_dep = F.dropout(self.deconv2_bn(self.deconv2(F.relu(d1_dep))), 0.5, training=self.opt.isTrain)
         d2_dep = torch.cat([d2_dep, e6], 1)
 
         d3_dep = F.dropout(self.deconv3_bn(self.deconv3(F.relu(d2_dep))), 0.5, training=self.opt.isTrain)
-
         d3_dep = torch.cat([d3_dep, e5], 1)
 
         d4_dep = self.deconv4_bn(self.deconv4(F.relu(d3_dep)))
@@ -129,6 +129,7 @@ class Generator(nn.Module):
         d8_dep_conv = self.conv3x3_8_dep(d8_dep)
         self.decoder_list_dep.append(d8_dep_conv)
 
+        # output o_dep
         o_dep = self.decoder_list_dep
         self.decoder_list_dep = []
 
@@ -158,8 +159,12 @@ class Generator(nn.Module):
         d8_seg = self.deconv8_seg(F.relu(d7_seg))
         d8_seg_conv = self.conv_score(d8_seg)
         self.decoder_list_seg.append(d8_seg_conv)
+
+        # output o_seg
         o_seg = self.decoder_list_seg
         self.decoder_list_seg = []
+
+        # output last_seg_with_label
         last_seg_with_label = torch.cat((torch.max(d8_seg_conv, 1, keepdim=True)[1].float(), torch.zeros(
             [d8_seg_conv.size(0), 2, d8_seg_conv.size(2), d8_seg_conv.size(3)]).cuda()), 1)
 

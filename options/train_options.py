@@ -17,7 +17,7 @@ class TrainOptions(BaseOptions):
         self.parser.add_argument('--lr_dis', type=float, default=0.001, help='initial learning rate for discriminator')
         self.parser.add_argument('--step_lr_epoch', type=int, default=50, help='epoch step for optimizer scheduler')
         self.parser.add_argument('--gamma_lr', type=float, default=0.5, help='ratio of reducing learning rate per step')
-        self.parser.add_argument('--batch_size', type=int, default=4, help='input batch size')
+        self.parser.add_argument('--batch_size', type=int, default=2, help='input batch size')
         self.parser.add_argument('--lambda_seg', type=float, default=100,
                                  help='weight for segmentation cross entropy loss in generator')
         self.parser.add_argument('--lambda_gan_feature', type=float, default=100,
