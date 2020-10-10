@@ -25,6 +25,7 @@ def train(opt):
             print('saving the model at the end of epoch %d, iters %d' % (epoch + 1, total_steps))
             model.save(epoch + 1)
 
+
 if __name__ == "__main__":
     opt = TrainOptions().parse()
     train(opt)

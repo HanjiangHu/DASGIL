@@ -6,7 +6,7 @@ from torch.utils.data import DataLoader
 import torch.utils.data as data
 from PIL import Image
 from util import make_dataset, IMG_EXTENSIONS, get_subdirectory
-
+import torchvision.transforms.functional as transformsF
 
 def get_data_loader(opt):
     batch_size = opt.batch_size
@@ -206,6 +206,7 @@ class ImageFolderTrain(data.Dataset):
                                             Image.BICUBIC)] + transform_list if resized_size is not None else transform_list
         transform_list = [transforms.RandomHorizontalFlip()] + transform_list
         self.real_transform = transforms.Compose(transform_list)
+        # real kitti
         root = self.train_real_root
         imgs = sorted(make_dataset(root))
         if len(imgs) == 0:
@@ -214,23 +215,32 @@ class ImageFolderTrain(data.Dataset):
                                 ",".join(IMG_EXTENSIONS)))
         self.root = root
         self.imgs = imgs
-
+        self.searchArea = {0:[0,1,2,4,5,6,7,8,9],1:[0,1,3,4,5,6,7,8,9],2:[0,2,4,5,6,7,8,9],
+                           3:[1,3,4,5,6,7,8,9],4:[0,1,2,3,4,5,6,7,8,9]}
     def __len__(self):
         return max(len(self.all_rgb_paths[0][0]), len(self.imgs))
+
+    def getEnvA_A_Prime(self,seq_A):
+        env_A = np.random.randint(0, len(get_subdirectory(self.train_fake_root + '/' + self.sequence[seq_A])))
+        env_A_ = 4 if env_A > 3 else env_A
+        l = self.searchArea[env_A_].copy()
+        l.remove(env_A)
+        env_A_prime = random.sample(l, 1)[0]
+        return env_A,env_A_prime
 
     def __getitem__(self, index):
         # real image
         real_path = self.imgs[index]
         real_img = self.loader(real_path)
         if self.real_transform is not None:
+            # may flip
             real_img = self.real_transform(real_img)
             real_img = self.normalize(real_img)
 
         # fake image, different sequences
         seq_A, seq_B = np.random.randint(0, len(self.sequence), 2)
-        env_A = random.randint(0, len(self.train_fake_root + '/' + self.sequence[seq_A]))
-        env_A_prime = random.randint(0, len(self.train_fake_root + '/' + self.sequence[seq_A]))
-        env_B = random.randint(0, len(self.train_fake_root + '/' + self.sequence[seq_B]))
+        env_A,env_A_prime = self.getEnvA_A_Prime(seq_A)
+        env_B = np.random.randint(0, len(get_subdirectory(self.train_fake_root + '/' + self.sequence[seq_B])))
 
         self.rgb_imgs_A = self.all_rgb_paths[seq_A][env_A]
         self.depth_imgs_A = self.all_depth_paths[seq_A][env_A]
@@ -244,9 +254,8 @@ class ImageFolderTrain(data.Dataset):
         self.depth_imgs_B = self.all_depth_paths[seq_B][env_B]
         self.seg_imgs_B = self.all_seg_paths[seq_B][env_B]
 
-
         if index >= 0:
-            index = index % (len(self.rgb_imgs_A) - 1)
+            index = index % len(self.rgb_imgs_A)
 
         path_rgb_A = self.rgb_imgs_A[index]
         rgb_img_A = self.loader(path_rgb_A)
@@ -257,15 +266,15 @@ class ImageFolderTrain(data.Dataset):
         path_seg_A = self.seg_imgs_A[index]
         seg_img_A = self.seg_loader(path_seg_A)
 
-        # find the positive and negative index
+        # find the positive
         if index < 5:
-            ran_idx = random.randint(1, 5)
+            ran_idx = np.random.randint(1, 6)
             index_prime = index + ran_idx
         elif (len(self.rgb_imgs_A_prime) - index) < 5 :
-            ran_idx = random.randint(1, 5)
+            ran_idx = np.random.randint(1, 6)
             index_prime = index - ran_idx
         else:
-            ran_idx = random.randint(-5, 5)
+            ran_idx = np.random.randint(-5, 6)
             if ran_idx > 0:
                 index_prime = min(index + ran_idx, len(self.rgb_imgs_A_prime) - 1)
             else:
@@ -280,7 +289,8 @@ class ImageFolderTrain(data.Dataset):
         path_seg_A_prime = self.seg_imgs_A_prime[index_prime]
         seg_img_A_prime = self.seg_loader(path_seg_A_prime)
 
-        index_B = random.randint(0, len(self.rgb_imgs_B) - 1)
+        # find the negative index
+        index_B = np.random.randint(0, len(self.rgb_imgs_B))
 
         path_rgb_B = self.rgb_imgs_B[index_B]
         rgb_img_B = self.loader(path_rgb_B)
@@ -290,13 +300,19 @@ class ImageFolderTrain(data.Dataset):
 
         path_seg_B = self.seg_imgs_B[index_B]
         seg_img_B = self.seg_loader(path_seg_B)
+        # 0-1
         A_A_prime_flip_prob = random.random()
         B_flip_prob = random.random()
+        judge = torch.rand(1)
 
         # transform the rgb, depth, segmentation simultaneously for A, A' (A_prime) and B
-        rgb_img_resized_A, depth_img_resized_A, depth_img_A, seg_img_resized_A = self.transform_triplet(A_A_prime_flip_prob, rgb_img_A, depth_img_A, seg_img_A)
-        rgb_img_resized_A_prime, depth_img_resized_A_prime, depth_img_A_prime, seg_img_resized_A_prime = self.transform_triplet(A_A_prime_flip_prob, rgb_img_A_prime, depth_img_A_prime, seg_img_A_prime)
-        rgb_img_resized_B, depth_img_resized_B, depth_img_B, seg_img_resized_B = self.transform_triplet(B_flip_prob, rgb_img_B, depth_img_B, seg_img_B)
+        rgb_img_resized_A, depth_img_resized_A, depth_img_A, seg_img_resized_A = self.transform_triplet(A_A_prime_flip_prob, rgb_img_A, depth_img_A, seg_img_A, judge)
+        rgb_img_resized_A_prime, depth_img_resized_A_prime, depth_img_A_prime, seg_img_resized_A_prime = self.transform_triplet(A_A_prime_flip_prob, rgb_img_A_prime, depth_img_A_prime, seg_img_A_prime, judge)
+        # transforms.ToPILImage()(rgb_img_resized_A).show()
+        # transforms.ToPILImage()(depth_img_resized_A).show()
+        # transforms.ToPILImage()(rgb_img_resized_A_prime).show()
+        # transforms.ToPILImage()(depth_img_resized_A_prime).show()
+        rgb_img_resized_B, depth_img_resized_B, depth_img_B, seg_img_resized_B = self.transform_triplet(B_flip_prob, rgb_img_B, depth_img_B, seg_img_B, judge)
 
         if self.return_paths:
             return {'rgb_img_A':rgb_img_resized_A, 'depth_img_A':depth_img_resized_A, 'seg_img_A':seg_img_resized_A, 'path_rgb_A':path_rgb_A, 'path_depth_A':path_depth_A, 'path_seg_A':path_seg_A, \
@@ -312,8 +328,7 @@ class ImageFolderTrain(data.Dataset):
                     'noresize_depth_img_A_prime':depth_img_A_prime, \
                         'rgb_img_B':rgb_img_resized_B, 'depth_img_B':depth_img_resized_B, 'seg_img_B':seg_img_resized_B, 'noresize_depth_img_B':depth_img_B,'real_img':real_img}
 
-
-    def transform_triplet(self, flip_prob, rgb_img, depth_img, seg_img):
+    def transform_triplet(self, flip_prob, rgb_img, depth_img, seg_img, judge):
         """
         Image pair processing before feeding into networks.
         :param flip_prob: probability for flipping the images
@@ -322,10 +337,10 @@ class ImageFolderTrain(data.Dataset):
         :param seg_img: corresponding synthetic segmentation image
         :return: identically transformed image pairs
         """
-        flip_transform = transforms.Compose([transforms.RandomHorizontalFlip(p=flip_prob)])
-        rgb_img = flip_transform(rgb_img)
-        depth_img = flip_transform(depth_img)
-        seg_img = flip_transform(seg_img)
+        if judge < flip_prob:
+            rgb_img = transformsF.hflip(rgb_img)
+            depth_img = transformsF.hflip(depth_img)
+            seg_img = transformsF.hflip(seg_img)
         if self.resized_size is not None:
             scale_transform = transforms.Compose([transforms.Resize(self.resized_size, Image.BICUBIC)])
             scale_transform_seg = transforms.Compose([transforms.Resize(self.resized_size, Image.NEAREST)])
@@ -352,7 +367,7 @@ class ImageFolderTrain(data.Dataset):
         arr_depth[arr_depth < 0.0] = 0.0
         dep_tensor = torch.from_numpy(arr_depth).unsqueeze(0)
 
-        # segmentation map
+        # segmentation map fixme why don't use toTensor
         seg_img_resized = torch.from_numpy(np.array(seg_img_resized)).long()
         seg_img_resized = seg_img_resized.transpose(1,2)
         seg_img_resized = seg_img_resized.transpose(0,1)

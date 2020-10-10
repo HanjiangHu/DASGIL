@@ -1,6 +1,6 @@
 # DASGIL: Domain Adaptation for Semantic and Geometric-aware Image-based Localization
 
-This is our Pytorch implementation for DASGIL ([arxiv](https://arxiv.org/pdf/2010.00573.pdf)) by [Hanjiang Hu](https://github.com/HanjiangHu) and [Ming Cheng](https://mingcheng991129.github.io/).
+This is our Pytorch implementation for DASGIL ([arxiv](https://arxiv.org/pdf/2010.00573.pdf)) by [Hanjiang Hu](https://github.com/HanjiangHu), [Zhijian Qiao](https://github.com/qiaozhijian) and [Ming Cheng](https://mingcheng991129.github.io/).
 
 
 <img src='img/overview.png' align="center" width=666 alt="Text alternative when image is not available">

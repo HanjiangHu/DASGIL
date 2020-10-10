@@ -85,9 +85,9 @@ class DASGIL(nn.Module):
     def set_input(self, input):
         # input three pairs of rgb, depth and segmentation map, for A, A'(A_prime) and B, A and A' are positive pairs
         # A and B are negative pairs
-        self.input_rgb_A = input['rgb_img_A'].cuda()
-        self.input_depth_A = input['depth_img_A'].cuda()
-        self.input_seg_A = input['seg_img_A'].cuda()
+        self.input_rgb_A = input['rgb_img_A'].cuda() #[B,3,H,W]
+        self.input_depth_A = input['depth_img_A'].cuda() #[B,1,H,W]
+        self.input_seg_A = input['seg_img_A'].cuda() #[B,3,H,W]
 
         self.input_rgb_A_prime = input['rgb_img_A_prime'].cuda()
         self.input_depth_A_prime = input['depth_img_A_prime'].cuda()
@@ -202,6 +202,7 @@ class DASGIL(nn.Module):
         D_syn = self.dis_f(mid_feature_syn_afterGen)
         D_real = self.dis_f(mid_feature_real)
 
+        # distingush real and syn
         D_loss = (torch.mean((D_real - 1.0) ** 2) + torch.mean((D_syn - 0.0) ** 2)) * 0.5
         self.loss_f_D = D_loss
         self.loss_f_D.backward()
