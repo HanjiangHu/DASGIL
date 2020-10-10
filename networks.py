@@ -39,6 +39,14 @@ class Generator(nn.Module):
         self.deconv7_bn = nn.BatchNorm2d(d)
         self.deconv8_dep = nn.ConvTranspose2d(d * 2, 1, 4, 2, 1)
 
+        self.deconv1_seg = nn.ConvTranspose2d(d * 8, d * 8, 4, 2, 1)
+        self.deconv1_bn_seg = nn.BatchNorm2d(d * 8)
+        self.deconv2_seg = nn.ConvTranspose2d(d * 8 * 2, d * 8, 4, 2, 1)
+        self.deconv2_bn_seg = nn.BatchNorm2d(d * 8)
+        self.deconv3_seg = nn.ConvTranspose2d(d * 8 * 2, d * 8, 4, 2, 1)
+        self.deconv3_bn_seg = nn.BatchNorm2d(d * 8)
+        self.deconv4_seg = nn.ConvTranspose2d(d * 8 * 2, d * 8, 4, 2, 1)
+        self.deconv4_bn_seg = nn.BatchNorm2d(d * 8)
         self.deconv5_seg = nn.ConvTranspose2d(d * 8 * 2, d * 4, 4, 2, 1)
         self.deconv5_bn_seg = nn.BatchNorm2d(d * 4)
         self.deconv6_seg = nn.ConvTranspose2d(d * 4 * 2, d * 4, 4, 2, 1)
@@ -49,10 +57,10 @@ class Generator(nn.Module):
 
         self.decoder_list_dep = []
         self.decoder_list_seg = []
-        self.conv3x3_1_dep = Conv3x3(d * 8, 1)
-        self.conv3x3_2_dep = Conv3x3(d * 8, 1)
-        self.conv3x3_3_dep = Conv3x3(d * 8, 1)
-        self.conv3x3_4_dep = Conv3x3(d * 8, 1)
+        # self.conv3x3_1_dep = Conv3x3(d * 8, 1)
+        # self.conv3x3_2_dep = Conv3x3(d * 8, 1)
+        # self.conv3x3_3_dep = Conv3x3(d * 8, 1)
+        # self.conv3x3_4_dep = Conv3x3(d * 8, 1)
         self.conv3x3_5_dep = Conv3x3(d * 4, 1)
         self.conv3x3_6_dep = Conv3x3(d * 2, 1)
         self.conv3x3_7_dep = Conv3x3(d * 1, 1)
@@ -132,28 +140,28 @@ class Generator(nn.Module):
         o_dep = self.decoder_list_dep
         self.decoder_list_dep = []
 
-        d1_seg = F.dropout(self.deconv1_bn(self.deconv1(F.relu(e8))), 0.5, training=self.opt.isTrain)
+        d1_seg = F.dropout(self.deconv1_bn_seg(self.deconv1_seg(F.relu(e8))), 0.5, training=self.opt.isTrain)
 
         d1_seg = torch.cat([d1_seg, e7], 1)
-        d2_seg = F.dropout(self.deconv2_bn(self.deconv2(F.relu(d1_seg))), 0.5, training=self.opt.isTrain)
+        d2_seg = F.dropout(self.deconv2_bn_seg(self.deconv2_seg(F.relu(d1_seg))), 0.5, training=self.opt.isTrain)
 
         d2_seg = torch.cat([d2_seg, e6], 1)
-        d3_seg = F.dropout(self.deconv3_bn(self.deconv3(F.relu(d2_seg))), 0.5, training=self.opt.isTrain)
+        d3_seg = F.dropout(self.deconv3_bn_seg(self.deconv3_seg(F.relu(d2_seg))), 0.5, training=self.opt.isTrain)
 
         d3_seg = torch.cat([d3_seg, e5], 1)
-        d4_seg = self.deconv4_bn(self.deconv4(F.relu(d3_seg)))
+        d4_seg = self.deconv4_bn_seg(self.deconv4_seg(F.relu(d3_seg)))
         d4_seg = torch.cat([d4_seg, e4], 1)
         d5_seg = self.deconv5_bn_seg(self.deconv5_seg(F.relu(d4_seg)))
-        d5_seg_conv = self.conv_score(d5_seg)
-        self.decoder_list_seg.append(d5_seg_conv)
+        # d5_seg_conv = self.conv_score(d5_seg)
+        # self.decoder_list_seg.append(d5_seg_conv)
         d5_seg = torch.cat([d5_seg, e3], 1)
         d6_seg = self.deconv6_bn_seg(self.deconv6_seg(F.relu(d5_seg)))
-        d6_seg_conv = self.conv_score(d6_seg)
-        self.decoder_list_seg.append(d6_seg_conv)
+        # d6_seg_conv = self.conv_score(d6_seg)
+        # self.decoder_list_seg.append(d6_seg_conv)
         d6_seg = torch.cat([d6_seg, e2], 1)
         d7_seg = self.deconv7_bn_seg(self.deconv7_seg(F.relu(d6_seg)))
-        d7_seg_conv = self.conv_score(d7_seg)
-        self.decoder_list_seg.append(d7_seg_conv)
+        # d7_seg_conv = self.conv_score(d7_seg)
+        # self.decoder_list_seg.append(d7_seg_conv)
         d7_seg = torch.cat([d7_seg, e1], 1)
         d8_seg = self.deconv8_seg(F.relu(d7_seg))
         d8_seg_conv = self.conv_score(d8_seg)

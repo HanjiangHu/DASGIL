@@ -30,7 +30,7 @@ def test(opt):
                 tensor_db_1 = model.test_db()
                 tensor_db_list_1.append(tensor_db_1)
                 path_db_list_1.append(img_db_path_1)
-            
+
             else:
                 print('there is something wrong with database loading')
                 break
@@ -58,8 +58,9 @@ def test(opt):
                 slice_ = opt.slice_list[i]
                 pos_0 = find_pos(root, slice_, final_imgname_0)
                 # save slice result for camera 0
-                fname = opt.output_path + '/' + opt.name + '/' + opt.name + '_slice' + str(slice_) + '_epoch' + str(opt.which_epoch) + '.txt'
-                
+                fname = opt.output_path + '/' + opt.name + '/' + opt.name + '_slice' + str(slice_) + '_epoch' + str(
+                    opt.which_epoch) + '.txt'
+
                 with open(fname, 'a')as f:
                     f.write(query_path_0)
                     f.write(' ')
@@ -80,7 +81,8 @@ def test(opt):
                 slice_ = opt.slice_list[i]
                 pos_1 = find_pos(root, slice_, final_imgname_1)
                 # save slice result for camera 1
-                fname = opt.output_path + '/' + opt.name + '/' + opt.name + '_slice' + str(slice_) + '_epoch' + str(opt.which_epoch) + '.txt'
+                fname = opt.output_path + '/' + opt.name + '/' + opt.name + '_slice' + str(slice_) + '_epoch' + str(
+                    opt.which_epoch) + '.txt'
 
                 with open(fname, 'a') as f:
                     f.write(query_path_1)
@@ -91,6 +93,19 @@ def test(opt):
                 last_env_name_c1 = imgname[13:17]
             else:
                 break
+    # the merged txt result
+    merge_txt = opt.output_path + '/' + opt.name + '/' + opt.name + '_epoch' + str(opt.which_epoch) + '.txt'
+
+    for sli in opt.slice_list:
+        fname = opt.output_path + '/' + opt.name + '/' + opt.name + '_slice' + str(sli) + '_epoch' + str(
+            opt.which_epoch) + '.txt'
+        with open(fname) as f:
+            for data in f.readlines():
+                data = data.rstrip('\n')
+                with open(merge_txt, 'a') as m_f:
+                    m_f.write(data)
+                    m_f.write('\n')
+
 
 # find the poses of database images
 def find_pos(root, slice_, imgname):
@@ -108,22 +123,9 @@ def find_pos(root, slice_, imgname):
 
                 break
     len_ = len(result)
-    return result[0 : len_ - 1]
+    return result[0: len_ - 1]
 
 
 if __name__ == "__main__":
     opt = TestOptions().parse()
     test(opt)
-
-
-
-
-
-
-
-    
-
-
-
-
-

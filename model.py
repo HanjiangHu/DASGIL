@@ -195,7 +195,7 @@ class DASGIL(nn.Module):
 
     def backward_D(self):
         _, _, mid_feature_syn_afterGen, _ = self.generator(self.input_rgb_A)
-        self.depth_op_real, self.seg_op_real, mid_feature_real, seg_mask = self.generator(self.input_GAN_real)
+        self.depth_op_real, _, mid_feature_real, seg_mask = self.generator(self.input_GAN_real)
         self.depth_output_real = self.depth_op_real[-1]
         self.seg_output_real = seg_mask
 

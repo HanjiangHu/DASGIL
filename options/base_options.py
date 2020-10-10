@@ -20,7 +20,7 @@ class BaseOptions():
                                  help='logs of tensorboard are saved here, and the test results are also saved here')
         self.parser.add_argument('--gpu_ids', type=str, default='0',
                                  help='gpu ids: e.g. 0  0,1,2, 0,2. use -1 for CPU')
-        self.parser.add_argument('--num_workers', type=int, default=0, help='number of workers to load data')
+        self.parser.add_argument('--num_workers', type=int, default=2, help='number of workers to load data')
         self.parser.add_argument('--resized_h', type=int, default=256, help='resized height')
         self.parser.add_argument('--resized_w', type=int, default=1024, help='resized width')
         self.parser.add_argument('--check_paths', action='store_true', help='return paths to check correspondence')
@@ -64,3 +64,4 @@ class BaseOptions():
                 opt_file.write('%s: %s\n' % (str(k), str(v)))
             opt_file.write('-------------- End ----------------\n')
         return self.opt
+

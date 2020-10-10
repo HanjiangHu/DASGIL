@@ -7,7 +7,7 @@ class TrainOptions(BaseOptions):
         self.isTrain = True
         self.parser.add_argument('--which_epoch', type=int, default=-1,
                                  help='which epoch to load if continuing training, default -1')
-        self.parser.add_argument('--niter_epoch', type=int, default=200,
+        self.parser.add_argument('--niter_epoch', type=int, default=50,
                                  help='how many epochs to train')
 
         self.parser.add_argument('--dis_nc', type=int, default=64, help='number of channel for discriminator')
@@ -30,8 +30,8 @@ class TrainOptions(BaseOptions):
                                  type=float, help='margin for triplet loss for each scale')
         self.parser.add_argument('--num_classes', type=int, default=15, help='number of classes for segmentation')
 
-        self.parser.add_argument('--log_epoch_freq', type=int, default=2, help='how many epoch to log on tensorboard')
-        self.parser.add_argument('--save_epoch_freq', type=int, default=10,
+        self.parser.add_argument('--log_epoch_freq', type=int, default=1, help='how many epoch to log on tensorboard')
+        self.parser.add_argument('--save_epoch_freq', type=int, default=1,
                                  help='frequency of saving checkpoints at the end of epochs')
         self.parser.add_argument('--print_iter', type=int, default=100,
                                  help='frequency of printing training results on console')
