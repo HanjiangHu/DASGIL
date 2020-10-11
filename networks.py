@@ -106,13 +106,13 @@ class Generator(nn.Module):
         # output mid_feature
         mid_feature.append(e8)
 
-        d1_dep = F.dropout(self.deconv1_bn(self.deconv1(F.relu(e8))), 0.5, training=self.opt.isTrain)
+        d1_dep = self.deconv1_bn(self.deconv1(F.relu(e8)))
         d1_dep = torch.cat([d1_dep, e7], 1)
 
-        d2_dep = F.dropout(self.deconv2_bn(self.deconv2(F.relu(d1_dep))), 0.5, training=self.opt.isTrain)
+        d2_dep = self.deconv2_bn(self.deconv2(F.relu(d1_dep)))
         d2_dep = torch.cat([d2_dep, e6], 1)
 
-        d3_dep = F.dropout(self.deconv3_bn(self.deconv3(F.relu(d2_dep))), 0.5, training=self.opt.isTrain)
+        d3_dep = self.deconv3_bn(self.deconv3(F.relu(d2_dep)))
         d3_dep = torch.cat([d3_dep, e5], 1)
 
         d4_dep = self.deconv4_bn(self.deconv4(F.relu(d3_dep)))
@@ -141,13 +141,13 @@ class Generator(nn.Module):
         o_dep = self.decoder_list_dep
         self.decoder_list_dep = []
 
-        d1_seg = F.dropout(self.deconv1_bn_seg(self.deconv1_seg(F.relu(e8))), 0.5, training=self.opt.isTrain)
+        d1_seg = self.deconv1_bn_seg(self.deconv1_seg(F.relu(e8)))
 
         d1_seg = torch.cat([d1_seg, e7], 1)
-        d2_seg = F.dropout(self.deconv2_bn_seg(self.deconv2_seg(F.relu(d1_seg))), 0.5, training=self.opt.isTrain)
+        d2_seg = self.deconv2_bn_seg(self.deconv2_seg(F.relu(d1_seg)))
 
         d2_seg = torch.cat([d2_seg, e6], 1)
-        d3_seg = F.dropout(self.deconv3_bn_seg(self.deconv3_seg(F.relu(d2_seg))), 0.5, training=self.opt.isTrain)
+        d3_seg = self.deconv3_bn_seg(self.deconv3_seg(F.relu(d2_seg)))
 
         d3_seg = torch.cat([d3_seg, e5], 1)
         d4_seg = self.deconv4_bn_seg(self.deconv4_seg(F.relu(d3_seg)))
