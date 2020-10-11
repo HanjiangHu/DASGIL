@@ -204,7 +204,7 @@ class DASGIL(nn.Module):
 
         # distingush real and syn
         D_loss = (torch.mean((D_real - 1.0) ** 2) + torch.mean((D_syn - 0.0) ** 2)) * 0.5
-        self.loss_f_D = D_loss
+        self.loss_f_D = D_loss * self.opt.lambda_gan_feature_dis
         self.loss_f_D.backward()
 
     def backward_G(self):

@@ -22,6 +22,9 @@ class TrainOptions(BaseOptions):
                                  help='weight for segmentation cross entropy loss in generator')
         self.parser.add_argument('--lambda_gan_feature', type=float, default=100,
                                  help='weight for gan loss in generator')
+        self.parser.add_argument('--lambda_gan_feature_dis', type=float, default=100,
+                                 help='weight for gan loss in discriminator')
+        
         self.parser.add_argument('--lambda_triplet_list', nargs='+', default=[0, 0, 25, 25, 25, 25, 0, 0],
                                  type=float, help='weight for triplet loss for each scale')
         self.parser.add_argument('--trip_layer_index', nargs='+', default=[3,4,5,6], type=int,
