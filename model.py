@@ -1,5 +1,5 @@
 import torch
-from networks import Generator, FeatureDiscriminator, init_weights
+from networks import Generator, FeatureDiscriminator, init_weights, GoodDiscriminator
 import torch.nn as nn
 import torch.optim
 import torch.nn.functional as F
@@ -39,6 +39,8 @@ class DASGIL(nn.Module):
             self.gen_optimizer = torch.optim.Adam(self.gen_parameters, lr=opt.lr, betas=(0.9, 0.999))
             # discriminator
             self.dis_f = FeatureDiscriminator(opt.dis_nc, opt.dis_nlayers)
+            # self.dis_f = GoodDiscriminator()
+
             init_weights(self.dis_f, 'normal')
             dis_params = list(self.dis_f.parameters())
             self.dis_optimizer = torch.optim.Adam([p for p in dis_params if p.requires_grad], lr=opt.lr_dis,

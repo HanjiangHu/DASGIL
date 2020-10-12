@@ -218,6 +218,105 @@ class FeatureDiscriminator(nn.Module):
         output_i = self.model(input_resized)
         return output_i
 
+class MyConvo2d(nn.Module):
+    def __init__(self, input_dim, output_dim, kernel_size, he_init = True,  stride = 1, bias = True):
+        super(MyConvo2d, self).__init__()
+        self.he_init = he_init
+        self.padding = int((kernel_size - 1)/2)
+        self.conv = nn.Conv2d(input_dim, output_dim, kernel_size, stride=1, padding=self.padding, bias = bias)
+
+    def forward(self, input):
+        output = self.conv(input)
+        return output
+
+class ConvMeanPool(nn.Module):
+    def __init__(self, input_dim, output_dim, kernel_size, he_init = True):
+        super(ConvMeanPool, self).__init__()
+        self.he_init = he_init
+        self.conv = MyConvo2d(input_dim, output_dim, kernel_size, he_init = self.he_init)
+
+    def forward(self, input):
+        output = self.conv(input)
+        output = (output[:,:,::2,::2] + output[:,:,1::2,::2] + output[:,:,::2,1::2] + output[:,:,1::2,1::2]) / 4
+        return output
+
+class MeanPoolConv(nn.Module):
+    def __init__(self, input_dim, output_dim, kernel_size, he_init = True):
+        super(MeanPoolConv, self).__init__()
+        self.he_init = he_init
+        self.conv = MyConvo2d(input_dim, output_dim, kernel_size, he_init = self.he_init)
+
+    def forward(self, input):
+        output = input
+        output = (output[:,:,::2,::2] + output[:,:,1::2,::2] + output[:,:,::2,1::2] + output[:,:,1::2,1::2]) / 4
+        output = self.conv(output)
+        return output
+
+class ResidualBlock(nn.Module):
+    def __init__(self, input_dim, output_dim, kernel_size, resample=None, hw=64,group=4):
+        super(ResidualBlock, self).__init__()
+
+        self.input_dim = input_dim
+        self.output_dim = output_dim
+        self.kernel_size = kernel_size
+        self.resample = resample
+        self.bn1 = nn.GroupNorm(group, input_dim)
+        self.bn2 = nn.GroupNorm(group, input_dim)
+        # self.bn1 = nn.BatchNorm2d(input_dim)
+        # self.bn2 = nn.BatchNorm2d(input_dim)
+
+        self.relu1 = nn.ReLU()
+        self.relu2 = nn.ReLU()
+
+        self.conv_shortcut = MeanPoolConv(input_dim, output_dim, kernel_size=1, he_init=False)
+        self.conv_1 = MyConvo2d(input_dim, input_dim, kernel_size=kernel_size, bias=False)
+        self.conv_2 = ConvMeanPool(input_dim, output_dim, kernel_size=kernel_size)
+
+    def forward(self, input):
+        if self.input_dim == self.output_dim and self.resample == None:
+            shortcut = input
+        else:
+            shortcut = self.conv_shortcut(input)
+
+        output = input
+        output = self.bn1(output)
+        output = self.relu1(output)
+        output = self.conv_1(output)
+        output = self.bn2(output)
+        output = self.relu2(output)
+        output = self.conv_2(output)
+
+        return shortcut + output
+
+class GoodDiscriminator(nn.Module):
+    def __init__(self, dim=8):
+        super(GoodDiscriminator, self).__init__()
+
+        self.dim = dim
+        self.rb1 = ResidualBlock(self.dim, 2*self.dim, 3, resample = 'down')
+        self.rb2 = ResidualBlock(4*self.dim, 4*self.dim, 3, resample = 'down')
+        self.rb3 = ResidualBlock(8*self.dim, 8*self.dim, 3, resample = 'down')
+        self.rb4 = ResidualBlock(16*self.dim, 16*self.dim, 3, resample = 'down')
+        self.rb5 = ResidualBlock(24*self.dim, 24*self.dim, 3, resample = 'down')
+        self.rb6 = ResidualBlock(32*self.dim, 32*self.dim, 3, resample = 'down')
+        self.rb7 = ResidualBlock(40*self.dim, 40*self.dim, 3, resample = 'down')
+        self.rb8 = nn.Sequential(nn.ReLU(), MyConvo2d(48*self.dim, 48*self.dim, kernel_size=3, bias=True))
+
+        self.model = [self.rb1,self.rb2,self.rb3,self.rb4,self.rb5,self.rb6,self.rb7]
+        self.ln1 = nn.Linear(48 * self.dim * 4 * 1, 1)
+
+    def forward(self, input):
+        output = input[0]
+
+        for i in range(7):
+            output = self.model[i](output)
+            output = torch.cat((output, input[i+1]), dim=1)
+        output = self.rb8(output)
+        output = output.view(-1, 48 * self.dim * 4 * 1)
+        # todo 线性器后面要不要加非线性函数固定到0,1
+        output = self.ln1(output)
+        output = output.view(-1)
+        return output
 
 def init_weights(net, init_type='normal', gain=0.02):
     # initialize weights for discriminator
