@@ -38,8 +38,8 @@ class DASGIL(nn.Module):
             self.gen_parameters = list(self.generator.parameters())
             self.gen_optimizer = torch.optim.Adam(self.gen_parameters, lr=opt.lr, betas=(0.9, 0.999))
             # discriminator
-            self.dis_f = FeatureDiscriminator(opt.dis_nc, opt.dis_nlayers)
-            # self.dis_f = GoodDiscriminator()
+            # self.dis_f = FeatureDiscriminator(opt.dis_nc, opt.dis_nlayers)
+            self.dis_f = GoodDiscriminator()
 
             init_weights(self.dis_f, 'normal')
             dis_params = list(self.dis_f.parameters())
@@ -250,7 +250,7 @@ class DASGIL(nn.Module):
             dn_list.append(dn_loss)
             dp_list.append(dp_loss)
             trip_list.append(triplet_loss)
-
+        print('positive:',dp_list,'negative:', dn_list)
         # depth loss
         self.dep_output_A = self.depth_op_A[-1]
         self.depth_loss_A = self.L1_criterion(self.depth_op_A[0],
