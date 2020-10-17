@@ -13,23 +13,23 @@ class TrainOptions(BaseOptions):
         self.parser.add_argument('--dis_nc', type=int, default=64, help='number of channel for discriminator')
         self.parser.add_argument('--dis_nlayers', type=int, default=2, help='number of layers for discriminator')
 
-        self.parser.add_argument('--lr', type=float, default=0.002, help='initial learning rate for generator')
+        self.parser.add_argument('--lr', type=float, default=0.001, help='initial learning rate for generator')
         self.parser.add_argument('--lr_dis', type=float, default=0.001, help='initial learning rate for discriminator')
         self.parser.add_argument('--step_lr_epoch', type=int, default=50, help='epoch step for optimizer scheduler')
         self.parser.add_argument('--gamma_lr', type=float, default=0.5, help='ratio of reducing learning rate per step')
         self.parser.add_argument('--batch_size', type=int, default=8, help='input batch size')
         self.parser.add_argument('--lambda_seg', type=float, default=100,
                                  help='weight for segmentation cross entropy loss in generator')
-        self.parser.add_argument('--lambda_gan_feature', type=float, default=100,
+        self.parser.add_argument('--lambda_gan_feature', type=float, default=500,
                                  help='weight for gan loss in generator')
-        self.parser.add_argument('--lambda_gan_feature_dis', type=float, default=10,
+        self.parser.add_argument('--lambda_gan_feature_dis', type=float, default=100,
                                  help='weight for gan loss in discriminator')
 
         self.parser.add_argument('--lambda_triplet_list', nargs='+', default=[0, 0, 25, 25, 25, 25, 0, 0],
                                  type=float, help='weight for triplet loss for each scale')
         self.parser.add_argument('--trip_layer_index', nargs='+', default=[3,4,5,6], type=int,
                                  help='which layers are used for triplet loss, counting from 1')
-        self.parser.add_argument('--margin_list', nargs='+', default=[10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0],
+        self.parser.add_argument('--margin_list', nargs='+', default=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
                                  type=float, help='margin for triplet loss for each scale')
         self.parser.add_argument('--num_classes', type=int, default=15, help='number of classes for segmentation')
 
