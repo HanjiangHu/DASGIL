@@ -11,7 +11,7 @@ def train(opt):
     train_writer = tensorboardX.SummaryWriter(os.path.join(opt.output_path, opt.name))
     model = DASGIL(opt).cuda()
     total_steps = 0
-    for epoch in range(opt.niter_epoch + 1):
+    for epoch in range(opt.which_epoch, opt.niter_epoch + 1):
         for i, data in enumerate(train_loader):
             total_steps += opt.batch_size
             print('total_steps:', total_steps, ' epoch_iter:', epoch)
