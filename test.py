@@ -39,6 +39,9 @@ def test(opt):
         last_env_name_c1 = 'database'
         iteration_c0 = 0
         iteration_c1 = 0
+        layer_index = ''
+        for layer in opt.trip_layer_index:
+            layer_index += str(layer)
         # encode the query feature
         for _, loader in enumerate(test_loader_lis_query[i]):
             print('testing CMU slice:', opt.slice_list[i], 'query:', loader['path'][0])
@@ -59,7 +62,7 @@ def test(opt):
                 pos_0 = find_pos(root, slice_, final_imgname_0)
                 # save slice result for camera 0
                 fname = opt.output_path + '/' + opt.name + '/' + opt.name + '_slice' + str(slice_) + '_epoch' + str(
-                    opt.which_epoch) + '.txt'
+                    opt.which_epoch)  + '_layer' + layer_index + '.txt'
 
                 with open(fname, 'a')as f:
                     f.write(query_path_0)
@@ -82,7 +85,7 @@ def test(opt):
                 pos_1 = find_pos(root, slice_, final_imgname_1)
                 # save slice result for camera 1
                 fname = opt.output_path + '/' + opt.name + '/' + opt.name + '_slice' + str(slice_) + '_epoch' + str(
-                    opt.which_epoch) + '.txt'
+                    opt.which_epoch) + '_layer' + layer_index + '.txt'
 
                 with open(fname, 'a') as f:
                     f.write(query_path_1)
@@ -94,11 +97,11 @@ def test(opt):
             else:
                 break
     # the merged txt result
-    merge_txt = opt.output_path + '/' + opt.name + '/' + opt.name + '_epoch' + str(opt.which_epoch) + '.txt'
+    merge_txt = opt.output_path + '/' + opt.name + '/' + opt.name + '_epoch' + str(opt.which_epoch) + '_layer' + layer_index + '.txt'
 
     for sli in opt.slice_list:
         fname = opt.output_path + '/' + opt.name + '/' + opt.name + '_slice' + str(sli) + '_epoch' + str(
-            opt.which_epoch) + '.txt'
+            opt.which_epoch)  + '_layer' + layer_index + '.txt'
         with open(fname) as f:
             for data in f.readlines():
                 data = data.rstrip('\n')
