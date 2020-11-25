@@ -173,15 +173,19 @@ class Generator(nn.Module):
         self.decoder_list_seg = []
 
         # output last_seg_with_label
-        last_seg_with_label = torch.cat((torch.max(d8_seg_conv, 1, keepdim=True)[1].float(), torch.zeros(
-            [d8_seg_conv.size(0), 2, d8_seg_conv.size(2), d8_seg_conv.size(3)]).cuda()), 1)
+        if self.opt.gpu_ids >= 0:
+            last_seg_with_label = torch.cat((torch.max(d8_seg_conv, 1, keepdim=True)[1].float(), torch.zeros(
+                [d8_seg_conv.size(0), 2, d8_seg_conv.size(2), d8_seg_conv.size(3)]).cuda(self.opt.gpu_ids)), 1)
+        else:
+            last_seg_with_label = torch.cat((torch.max(d8_seg_conv, 1, keepdim=True)[1].float(), torch.zeros(
+                [d8_seg_conv.size(0), 2, d8_seg_conv.size(2), d8_seg_conv.size(3)]).cpu()), 1)
 
         return o_dep, o_seg, mid_feature, last_seg_with_label
 
 
-class FeatureDiscriminator(nn.Module):
+class FlattenDiscriminator(nn.Module):
     def __init__(self, output_nc=64, n_layers=2, use_bn=True):
-        super(FeatureDiscriminator, self).__init__()
+        super(FlattenDiscriminator, self).__init__()
         nonlinearity = nn.PReLU()
 
         self.dim_list = (1004800, output_nc)
@@ -288,9 +292,9 @@ class ResidualBlock(nn.Module):
 
         return shortcut + output
 
-class GoodDiscriminator(nn.Module):
+class CascadeDiscriminator(nn.Module):
     def __init__(self, dim=8):
-        super(GoodDiscriminator, self).__init__()
+        super(CascadeDiscriminator, self).__init__()
 
         self.dim = dim
         self.rb1 = ResidualBlock(self.dim, 2*self.dim, 3, resample = 'down')
@@ -313,12 +317,11 @@ class GoodDiscriminator(nn.Module):
             output = torch.cat((output, input[i+1]), dim=1)
         output = self.rb8(output)
         output = output.view(-1, 48 * self.dim * 4 * 1)
-        # todo 线性器后面要不要加非线性函数固定到0,1
         output = self.ln1(output)
         output = output.view(-1)
         return output
 
-def init_weights(net, init_type='normal', gain=0.02):
+def init_weights(net, init_type='normal', gain=0.02, opt=None):
     # initialize weights for discriminator
     def init_func(m):
         classname = m.__class__.__name__
@@ -339,7 +342,10 @@ def init_weights(net, init_type='normal', gain=0.02):
             nn.init.uniform_(m.weight.data, 1.0, gain)
             nn.init.constant_(m.bias.data, 0.0)
 
-    net = net.cuda()
+    if opt.gpu_ids >= 0:
+        net = net.cuda(opt.gpu_ids)
+    else:
+        net = net.cpu()
     net.apply(init_func)
 
 

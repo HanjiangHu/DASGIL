@@ -5,7 +5,10 @@ from data import get_data_loader
 
 def test(opt):
     test_loader_lis_db, test_loader_lis_query = get_data_loader(opt)
-    model = DASGIL(opt).cuda()
+    if opt.gpu_ids >= 0:
+        model = DASGIL(opt).cuda(opt.gpu_ids)
+    else:
+        model = DASGIL(opt).cpu()
 
     for i in range(len(test_loader_lis_db)):
         tensor_db_list_0 = []

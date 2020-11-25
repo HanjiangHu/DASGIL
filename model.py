@@ -1,5 +1,5 @@
 import torch
-from networks import Generator, FeatureDiscriminator, init_weights, GoodDiscriminator
+from networks import Generator, FlattenDiscriminator, init_weights, CascadeDiscriminator
 import torch.nn as nn
 import torch.optim
 import torch.nn.functional as F
@@ -26,9 +26,11 @@ class DASGIL(nn.Module):
     def __init__(self, opt):
         super(DASGIL, self).__init__()
         self.opt = opt
-        self.gpu_ids = opt.gpu_ids
         self.isTrain = opt.isTrain
-        self.Tensor = torch.cuda.FloatTensor
+        if self.opt.gpu_ids >= 0:
+            self.Tensor = torch.cuda.FloatTensor
+        else:
+            self.Tensor = torch.FloatTensor
         self.save_dir = os.path.join(opt.checkpoints_dir, opt.name)
 
         # generator
@@ -38,10 +40,16 @@ class DASGIL(nn.Module):
             self.gen_parameters = list(self.generator.parameters())
             self.gen_optimizer = torch.optim.Adam(self.gen_parameters, lr=opt.lr, betas=(0.9, 0.999))
             # discriminator
-            # self.dis_f = FeatureDiscriminator(opt.dis_nc, opt.dis_nlayers)
-            self.dis_f = GoodDiscriminator()
+            assert opt.dis_type == "FD" or opt.dis_type == "CD"
+            if opt.dis_type == "FD":
+                self.dis_f = FlattenDiscriminator(opt.dis_nc, opt.dis_nlayers)
+            elif opt.dis_type == "CD":
+                self.dis_f = CascadeDiscriminator()
+            else:
+                print("ERROR: only FD or CD is supported")
 
-            init_weights(self.dis_f, 'normal')
+
+            init_weights(self.dis_f, 'normal',opt=self.opt)
             dis_params = list(self.dis_f.parameters())
             self.dis_optimizer = torch.optim.Adam([p for p in dis_params if p.requires_grad], lr=opt.lr_dis,
                                                   betas=(0.5, 0.9))
@@ -87,18 +95,32 @@ class DASGIL(nn.Module):
     def set_input(self, input):
         # input three pairs of rgb, depth and segmentation map, for A, A'(A_prime) and B, A and A' are positive pairs
         # A and B are negative pairs
-        self.input_rgb_A = input['rgb_img_A'].cuda() #[B,3,H,W]
-        self.input_depth_A = input['depth_img_A'].cuda() #[B,1,H,W]
-        self.input_seg_A = input['seg_img_A'].cuda() #[B,3,H,W]
+        if self.opt.gpu_ids >= 0:
+            self.input_rgb_A = input['rgb_img_A'].cuda(self.opt.gpu_ids) #[B,3,H,W]
+            self.input_depth_A = input['depth_img_A'].cuda(self.opt.gpu_ids) #[B,1,H,W]
+            self.input_seg_A = input['seg_img_A'].cuda(self.opt.gpu_ids) #[B,3,H,W]
 
-        self.input_rgb_A_prime = input['rgb_img_A_prime'].cuda()
-        self.input_depth_A_prime = input['depth_img_A_prime'].cuda()
-        self.input_seg_A_prime = input['seg_img_A_prime'].cuda()
+            self.input_rgb_A_prime = input['rgb_img_A_prime'].cuda(self.opt.gpu_ids)
+            self.input_depth_A_prime = input['depth_img_A_prime'].cuda(self.opt.gpu_ids)
+            self.input_seg_A_prime = input['seg_img_A_prime'].cuda(self.opt.gpu_ids)
 
-        self.input_rgb_B = input['rgb_img_B'].cuda()
-        self.input_depth_B = input['depth_img_B'].cuda()
-        self.input_seg_B = input['seg_img_B'].cuda()
-        self.input_GAN_real = input['real_img'].cuda()
+            self.input_rgb_B = input['rgb_img_B'].cuda(self.opt.gpu_ids)
+            self.input_depth_B = input['depth_img_B'].cuda(self.opt.gpu_ids)
+            self.input_seg_B = input['seg_img_B'].cuda(self.opt.gpu_ids)
+            self.input_GAN_real = input['real_img'].cuda(self.opt.gpu_ids)
+        else:
+            self.input_rgb_A = input['rgb_img_A'] # [B,3,H,W]
+            self.input_depth_A = input['depth_img_A']  # [B,1,H,W]
+            self.input_seg_A = input['seg_img_A'] # [B,3,H,W]
+
+            self.input_rgb_A_prime = input['rgb_img_A_prime']
+            self.input_depth_A_prime = input['depth_img_A_prime']
+            self.input_seg_A_prime = input['seg_img_A_prime']
+
+            self.input_rgb_B = input['rgb_img_B']
+            self.input_depth_B = input['depth_img_B']
+            self.input_seg_B = input['seg_img_B']
+            self.input_GAN_real = input['real_img']
 
     def set_input_query(self, input_query, input_path):
         """
@@ -107,7 +129,10 @@ class DASGIL(nn.Module):
         :param input_path: image path
         :return: image tensor on cuda
         """
-        self.input_query_test = input_query.cuda()
+        if self.opt.gpu_ids >= 0:
+            self.input_query_test = input_query.cuda(self.opt.gpu_ids)
+        else:
+            self.input_query_test = input_query.cpu()
         self.input_query_path = input_path
         return self.input_query_path
 
@@ -118,7 +143,10 @@ class DASGIL(nn.Module):
         :param input_path: image path
         :return: image tensor on cuda
         """
-        self.input_db_test = input_db.cuda()
+        if self.opt.gpu_ids >= 0:
+            self.input_db_test = input_db.cuda(self.opt.gpu_ids)
+        else:
+            self.input_db_test = input_db.cpu()
         self.input_db_path = input_path
         return self.input_db_test, self.input_db_path
 
@@ -243,7 +271,7 @@ class DASGIL(nn.Module):
 
             dn_loss = L2loss(self.tensor_A, self.tensor_B)
             dp_loss = L2loss(self.tensor_A, self.tensor_A_prime)
-            triplet_loss = torch.max(torch.cuda.FloatTensor([0.0]),
+            triplet_loss = torch.max(torch.FloatTensor([0.0]).cuda(self.opt.gpu_ids) if self.opt.gpu_ids >= 0 else torch.FloatTensor([0.0]).cpu(),
                                      1 - dn_loss /
                                      (self.margin_list[i] + dp_loss)) * self.triplet_weight_list[i]
             self.triplet_loss_total += triplet_loss
@@ -306,5 +334,9 @@ class DASGIL(nn.Module):
         filename_dis = save_path_dis + '.pth'
         torch.save(self.dis_f.cpu().state_dict(), filename_dis)
 
-        self.generator.cuda(self.gpu_ids[0])
-        self.dis_f.cuda(self.gpu_ids[0])
+        if self.opt.gpu_ids >= 0:
+            self.generator.cuda(self.opt.gpu_ids)
+            self.dis_f.cuda(self.opt.gpu_ids)
+        else:
+            self.generator.cpu()
+            self.dis_f.cpu()

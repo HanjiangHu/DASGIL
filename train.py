@@ -9,7 +9,10 @@ import os
 def train(opt):
     train_loader = get_data_loader(opt)
     train_writer = tensorboardX.SummaryWriter(os.path.join(opt.output_path, opt.name))
-    model = DASGIL(opt).cuda()
+    if opt.gpu_ids >= 0:
+        model = DASGIL(opt).cuda(opt.gpu_ids)
+    else:
+        model = DASGIL(opt).cpu()
     total_steps = 0
     for epoch in range(opt.which_epoch, opt.niter_epoch + 1):
         for i, data in enumerate(train_loader):
@@ -17,6 +20,7 @@ def train(opt):
             print('total_steps:', total_steps, ' epoch_iter:', epoch)
             model.set_input(data)
             model.optimize_params()
+            model.save(epoch + 1)
             if (total_steps) % opt.print_iter == 0:
                 print('Dis loss:',model.loss_f_D, 'Total gen loss:', model.total_loss, 'Gen loss:', model.loss_f_G)
         if (epoch + 1) % opt.log_epoch_freq == 0:

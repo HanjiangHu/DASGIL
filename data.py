@@ -305,13 +305,8 @@ class ImageFolderTrain(data.Dataset):
         B_flip_prob = random.random()
         judge = torch.rand(1)
 
-        # transform the rgb, depth, segmentation simultaneously for A, A' (A_prime) and B
         rgb_img_resized_A, depth_img_resized_A, depth_img_A, seg_img_resized_A = self.transform_triplet(A_A_prime_flip_prob, rgb_img_A, depth_img_A, seg_img_A, judge)
         rgb_img_resized_A_prime, depth_img_resized_A_prime, depth_img_A_prime, seg_img_resized_A_prime = self.transform_triplet(A_A_prime_flip_prob, rgb_img_A_prime, depth_img_A_prime, seg_img_A_prime, judge)
-        # transforms.ToPILImage()(rgb_img_resized_A).show()
-        # transforms.ToPILImage()(depth_img_resized_A).show()
-        # transforms.ToPILImage()(rgb_img_resized_A_prime).show()
-        # transforms.ToPILImage()(depth_img_resized_A_prime).show()
         rgb_img_resized_B, depth_img_resized_B, depth_img_B, seg_img_resized_B = self.transform_triplet(B_flip_prob, rgb_img_B, depth_img_B, seg_img_B, judge)
 
         if self.return_paths:
@@ -367,7 +362,7 @@ class ImageFolderTrain(data.Dataset):
         arr_depth[arr_depth < 0.0] = 0.0
         dep_tensor = torch.from_numpy(arr_depth).unsqueeze(0)
 
-        # segmentation map fixme why don't use toTensor
+        # segmentation map
         seg_img_resized = torch.from_numpy(np.array(seg_img_resized)).long()
         seg_img_resized = seg_img_resized.transpose(1,2)
         seg_img_resized = seg_img_resized.transpose(0,1)
