@@ -31,6 +31,7 @@ class Generator(nn.Module):
         self.deconv3_bn = nn.BatchNorm2d(d * 8)
         self.deconv4 = nn.ConvTranspose2d(d * 8 * 2, d * 8, 4, 2, 1)
         self.deconv4_bn = nn.BatchNorm2d(d * 8)
+
         self.deconv5 = nn.ConvTranspose2d(d * 8 * 2, d * 4, 4, 2, 1)
         self.deconv5_bn = nn.BatchNorm2d(d * 4)
         self.deconv6 = nn.ConvTranspose2d(d * 4 * 2, d * 2, 4, 2, 1)
@@ -39,6 +40,14 @@ class Generator(nn.Module):
         self.deconv7_bn = nn.BatchNorm2d(d)
         self.deconv8_dep = nn.ConvTranspose2d(d * 2, 1, 4, 2, 1)
 
+        self.deconv1_seg = nn.ConvTranspose2d(d * 8, d * 8, 4, 2, 1)
+        self.deconv1_bn_seg = nn.BatchNorm2d(d * 8)
+        self.deconv2_seg = nn.ConvTranspose2d(d * 8 * 2, d * 8, 4, 2, 1)
+        self.deconv2_bn_seg = nn.BatchNorm2d(d * 8)
+        self.deconv3_seg = nn.ConvTranspose2d(d * 8 * 2, d * 8, 4, 2, 1)
+        self.deconv3_bn_seg = nn.BatchNorm2d(d * 8)
+        self.deconv4_seg = nn.ConvTranspose2d(d * 8 * 2, d * 8, 4, 2, 1)
+        self.deconv4_bn_seg = nn.BatchNorm2d(d * 8)
         self.deconv5_seg = nn.ConvTranspose2d(d * 8 * 2, d * 4, 4, 2, 1)
         self.deconv5_bn_seg = nn.BatchNorm2d(d * 4)
         self.deconv6_seg = nn.ConvTranspose2d(d * 4 * 2, d * 4, 4, 2, 1)
@@ -49,10 +58,10 @@ class Generator(nn.Module):
 
         self.decoder_list_dep = []
         self.decoder_list_seg = []
-        self.conv3x3_1_dep = Conv3x3(d * 8, 1)
-        self.conv3x3_2_dep = Conv3x3(d * 8, 1)
-        self.conv3x3_3_dep = Conv3x3(d * 8, 1)
-        self.conv3x3_4_dep = Conv3x3(d * 8, 1)
+        # self.conv3x3_1_dep = Conv3x3(d * 8, 1)
+        # self.conv3x3_2_dep = Conv3x3(d * 8, 1)
+        # self.conv3x3_3_dep = Conv3x3(d * 8, 1)
+        # self.conv3x3_4_dep = Conv3x3(d * 8, 1)
         self.conv3x3_5_dep = Conv3x3(d * 4, 1)
         self.conv3x3_6_dep = Conv3x3(d * 2, 1)
         self.conv3x3_7_dep = Conv3x3(d * 1, 1)
@@ -94,17 +103,16 @@ class Generator(nn.Module):
         mid_feature.append(e7)
 
         e8 = self.conv8(F.leaky_relu(e7, 0.2))
+        # output mid_feature
         mid_feature.append(e8)
 
-        d1_dep = F.dropout(self.deconv1_bn(self.deconv1(F.relu(e8))), 0.5, training=self.opt.isTrain)
-
+        d1_dep = self.deconv1_bn(self.deconv1(F.relu(e8)))
         d1_dep = torch.cat([d1_dep, e7], 1)
 
-        d2_dep = F.dropout(self.deconv2_bn(self.deconv2(F.relu(d1_dep))), 0.5, training=self.opt.isTrain)
+        d2_dep = self.deconv2_bn(self.deconv2(F.relu(d1_dep)))
         d2_dep = torch.cat([d2_dep, e6], 1)
 
-        d3_dep = F.dropout(self.deconv3_bn(self.deconv3(F.relu(d2_dep))), 0.5, training=self.opt.isTrain)
-
+        d3_dep = self.deconv3_bn(self.deconv3(F.relu(d2_dep)))
         d3_dep = torch.cat([d3_dep, e5], 1)
 
         d4_dep = self.deconv4_bn(self.deconv4(F.relu(d3_dep)))
@@ -129,46 +137,55 @@ class Generator(nn.Module):
         d8_dep_conv = self.conv3x3_8_dep(d8_dep)
         self.decoder_list_dep.append(d8_dep_conv)
 
+        # output o_dep
         o_dep = self.decoder_list_dep
         self.decoder_list_dep = []
 
-        d1_seg = F.dropout(self.deconv1_bn(self.deconv1(F.relu(e8))), 0.5, training=self.opt.isTrain)
+        d1_seg = self.deconv1_bn_seg(self.deconv1_seg(F.relu(e8)))
 
         d1_seg = torch.cat([d1_seg, e7], 1)
-        d2_seg = F.dropout(self.deconv2_bn(self.deconv2(F.relu(d1_seg))), 0.5, training=self.opt.isTrain)
+        d2_seg = self.deconv2_bn_seg(self.deconv2_seg(F.relu(d1_seg)))
 
         d2_seg = torch.cat([d2_seg, e6], 1)
-        d3_seg = F.dropout(self.deconv3_bn(self.deconv3(F.relu(d2_seg))), 0.5, training=self.opt.isTrain)
+        d3_seg = self.deconv3_bn_seg(self.deconv3_seg(F.relu(d2_seg)))
 
         d3_seg = torch.cat([d3_seg, e5], 1)
-        d4_seg = self.deconv4_bn(self.deconv4(F.relu(d3_seg)))
+        d4_seg = self.deconv4_bn_seg(self.deconv4_seg(F.relu(d3_seg)))
         d4_seg = torch.cat([d4_seg, e4], 1)
         d5_seg = self.deconv5_bn_seg(self.deconv5_seg(F.relu(d4_seg)))
-        d5_seg_conv = self.conv_score(d5_seg)
-        self.decoder_list_seg.append(d5_seg_conv)
+        # d5_seg_conv = self.conv_score(d5_seg)
+        # self.decoder_list_seg.append(d5_seg_conv)
         d5_seg = torch.cat([d5_seg, e3], 1)
         d6_seg = self.deconv6_bn_seg(self.deconv6_seg(F.relu(d5_seg)))
-        d6_seg_conv = self.conv_score(d6_seg)
-        self.decoder_list_seg.append(d6_seg_conv)
+        # d6_seg_conv = self.conv_score(d6_seg)
+        # self.decoder_list_seg.append(d6_seg_conv)
         d6_seg = torch.cat([d6_seg, e2], 1)
         d7_seg = self.deconv7_bn_seg(self.deconv7_seg(F.relu(d6_seg)))
-        d7_seg_conv = self.conv_score(d7_seg)
-        self.decoder_list_seg.append(d7_seg_conv)
+        # d7_seg_conv = self.conv_score(d7_seg)
+        # self.decoder_list_seg.append(d7_seg_conv)
         d7_seg = torch.cat([d7_seg, e1], 1)
         d8_seg = self.deconv8_seg(F.relu(d7_seg))
         d8_seg_conv = self.conv_score(d8_seg)
         self.decoder_list_seg.append(d8_seg_conv)
+
+        # output o_seg
         o_seg = self.decoder_list_seg
         self.decoder_list_seg = []
-        last_seg_with_label = torch.cat((torch.max(d8_seg_conv, 1, keepdim=True)[1].float(), torch.zeros(
-            [d8_seg_conv.size(0), 2, d8_seg_conv.size(2), d8_seg_conv.size(3)]).cuda()), 1)
+
+        # output last_seg_with_label
+        if self.opt.gpu_ids >= 0:
+            last_seg_with_label = torch.cat((torch.max(d8_seg_conv, 1, keepdim=True)[1].float(), torch.zeros(
+                [d8_seg_conv.size(0), 2, d8_seg_conv.size(2), d8_seg_conv.size(3)]).cuda(self.opt.gpu_ids)), 1)
+        else:
+            last_seg_with_label = torch.cat((torch.max(d8_seg_conv, 1, keepdim=True)[1].float(), torch.zeros(
+                [d8_seg_conv.size(0), 2, d8_seg_conv.size(2), d8_seg_conv.size(3)]).cpu()), 1)
 
         return o_dep, o_seg, mid_feature, last_seg_with_label
 
 
-class FeatureDiscriminator(nn.Module):
+class FlattenDiscriminator(nn.Module):
     def __init__(self, output_nc=64, n_layers=2, use_bn=True):
-        super(FeatureDiscriminator, self).__init__()
+        super(FlattenDiscriminator, self).__init__()
         nonlinearity = nn.PReLU()
 
         self.dim_list = (1004800, output_nc)
@@ -205,8 +222,106 @@ class FeatureDiscriminator(nn.Module):
         output_i = self.model(input_resized)
         return output_i
 
+class MyConvo2d(nn.Module):
+    def __init__(self, input_dim, output_dim, kernel_size, he_init = True,  stride = 1, bias = True):
+        super(MyConvo2d, self).__init__()
+        self.he_init = he_init
+        self.padding = int((kernel_size - 1)/2)
+        self.conv = nn.Conv2d(input_dim, output_dim, kernel_size, stride=1, padding=self.padding, bias = bias)
 
-def init_weights(net, init_type='normal', gain=0.02):
+    def forward(self, input):
+        output = self.conv(input)
+        return output
+
+class ConvMeanPool(nn.Module):
+    def __init__(self, input_dim, output_dim, kernel_size, he_init = True):
+        super(ConvMeanPool, self).__init__()
+        self.he_init = he_init
+        self.conv = MyConvo2d(input_dim, output_dim, kernel_size, he_init = self.he_init)
+
+    def forward(self, input):
+        output = self.conv(input)
+        output = (output[:,:,::2,::2] + output[:,:,1::2,::2] + output[:,:,::2,1::2] + output[:,:,1::2,1::2]) / 4
+        return output
+
+class MeanPoolConv(nn.Module):
+    def __init__(self, input_dim, output_dim, kernel_size, he_init = True):
+        super(MeanPoolConv, self).__init__()
+        self.he_init = he_init
+        self.conv = MyConvo2d(input_dim, output_dim, kernel_size, he_init = self.he_init)
+
+    def forward(self, input):
+        output = input
+        output = (output[:,:,::2,::2] + output[:,:,1::2,::2] + output[:,:,::2,1::2] + output[:,:,1::2,1::2]) / 4
+        output = self.conv(output)
+        return output
+
+class ResidualBlock(nn.Module):
+    def __init__(self, input_dim, output_dim, kernel_size, resample=None, hw=64,group=4):
+        super(ResidualBlock, self).__init__()
+
+        self.input_dim = input_dim
+        self.output_dim = output_dim
+        self.kernel_size = kernel_size
+        self.resample = resample
+        self.bn1 = nn.GroupNorm(group, input_dim)
+        self.bn2 = nn.GroupNorm(group, input_dim)
+        # self.bn1 = nn.BatchNorm2d(input_dim)
+        # self.bn2 = nn.BatchNorm2d(input_dim)
+
+        self.relu1 = nn.ReLU()
+        self.relu2 = nn.ReLU()
+
+        self.conv_shortcut = MeanPoolConv(input_dim, output_dim, kernel_size=1, he_init=False)
+        self.conv_1 = MyConvo2d(input_dim, input_dim, kernel_size=kernel_size, bias=False)
+        self.conv_2 = ConvMeanPool(input_dim, output_dim, kernel_size=kernel_size)
+
+    def forward(self, input):
+        if self.input_dim == self.output_dim and self.resample == None:
+            shortcut = input
+        else:
+            shortcut = self.conv_shortcut(input)
+
+        output = input
+        output = self.bn1(output)
+        output = self.relu1(output)
+        output = self.conv_1(output)
+        output = self.bn2(output)
+        output = self.relu2(output)
+        output = self.conv_2(output)
+
+        return shortcut + output
+
+class CascadeDiscriminator(nn.Module):
+    def __init__(self, dim=8):
+        super(CascadeDiscriminator, self).__init__()
+
+        self.dim = dim
+        self.rb1 = ResidualBlock(self.dim, 2*self.dim, 3, resample = 'down')
+        self.rb2 = ResidualBlock(4*self.dim, 4*self.dim, 3, resample = 'down')
+        self.rb3 = ResidualBlock(8*self.dim, 8*self.dim, 3, resample = 'down')
+        self.rb4 = ResidualBlock(16*self.dim, 16*self.dim, 3, resample = 'down')
+        self.rb5 = ResidualBlock(24*self.dim, 24*self.dim, 3, resample = 'down')
+        self.rb6 = ResidualBlock(32*self.dim, 32*self.dim, 3, resample = 'down')
+        self.rb7 = ResidualBlock(40*self.dim, 40*self.dim, 3, resample = 'down')
+        self.rb8 = nn.Sequential(nn.ReLU(), MyConvo2d(48*self.dim, 48*self.dim, kernel_size=3, bias=True))
+
+        self.model = [self.rb1,self.rb2,self.rb3,self.rb4,self.rb5,self.rb6,self.rb7]
+        self.ln1 = nn.Linear(48 * self.dim * 4 * 1, 1)
+
+    def forward(self, input):
+        output = input[0]
+
+        for i in range(7):
+            output = self.model[i](output)
+            output = torch.cat((output, input[i+1]), dim=1)
+        output = self.rb8(output)
+        output = output.view(-1, 48 * self.dim * 4 * 1)
+        output = self.ln1(output)
+        output = output.view(-1)
+        return output
+
+def init_weights(net, init_type='normal', gain=0.02, opt=None):
     # initialize weights for discriminator
     def init_func(m):
         classname = m.__class__.__name__
@@ -227,7 +342,10 @@ def init_weights(net, init_type='normal', gain=0.02):
             nn.init.uniform_(m.weight.data, 1.0, gain)
             nn.init.constant_(m.bias.data, 0.0)
 
-    net = net.cuda()
+    if opt.gpu_ids >= 0:
+        net = net.cuda(opt.gpu_ids)
+    else:
+        net = net.cpu()
     net.apply(init_func)
 
 

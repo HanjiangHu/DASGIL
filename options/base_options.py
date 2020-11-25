@@ -1,7 +1,6 @@
 import argparse
 import os
 from util import util
-import torch
 
 
 class BaseOptions():
@@ -18,12 +17,15 @@ class BaseOptions():
                                  help='checkpoint models are saved here')
         self.parser.add_argument('--output_path', type=str, default='./output',
                                  help='logs of tensorboard are saved here, and the test results are also saved here')
-        self.parser.add_argument('--gpu_ids', type=str, default='0',
-                                 help='gpu ids: e.g. 0  0,1,2, 0,2. use -1 for CPU')
-        self.parser.add_argument('--num_workers', type=int, default=0, help='number of workers to load data')
+        self.parser.add_argument('--gpu_ids', type=int, default=0,
+                                 help='gpu ids: e.g. 1, single GPU only, use -1 for CPU')
+        self.parser.add_argument('--num_workers', type=int, default=2, help='number of workers to load data')
         self.parser.add_argument('--resized_h', type=int, default=256, help='resized height')
         self.parser.add_argument('--resized_w', type=int, default=1024, help='resized width')
         self.parser.add_argument('--check_paths', action='store_true', help='return paths to check correspondence')
+        self.parser.add_argument('--dis_type', type=str, default='FD',
+                                 help='type of multi-scale discriminator, '
+                                      'use FD or CD for Flatten or Cascade Discriminator')
 
         self.initialized = True
 
@@ -32,17 +34,6 @@ class BaseOptions():
             self.initialize()
         self.opt = self.parser.parse_args()
         self.opt.isTrain = self.isTrain  # train or test
-
-        str_ids = self.opt.gpu_ids.split(',')
-        self.opt.gpu_ids = []
-        for str_id in str_ids:
-            id = int(str_id)
-            if id >= 0:
-                self.opt.gpu_ids.append(id)
-
-        # set gpu ids
-        if len(self.opt.gpu_ids) > 0:
-            torch.cuda.set_device(self.opt.gpu_ids[0])
 
         args = vars(self.opt)
 
@@ -64,3 +55,4 @@ class BaseOptions():
                 opt_file.write('%s: %s\n' % (str(k), str(v)))
             opt_file.write('-------------- End ----------------\n')
         return self.opt
+
