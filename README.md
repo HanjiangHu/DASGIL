@@ -1,6 +1,6 @@
 # DASGIL: Domain Adaptation for Semantic and Geometric-aware Image-based Localization
 
-This is our Pytorch implementation for DASGIL ([arxiv](https://arxiv.org/pdf/2010.00573.pdf)) by [Hanjiang Hu](https://github.com/HanjiangHu), [Zhijian Qiao](https://github.com/qiaozhijian) and [Ming Cheng](https://mingcheng991129.github.io/).
+This is our Pytorch implementation for DASGIL ([paper](https://ieeexplore.ieee.org/document/9296559)) by [Hanjiang Hu](https://github.com/HanjiangHu), [Zhijian Qiao](https://github.com/qiaozhijian) and [Ming Cheng](https://mingcheng991129.github.io/). The work has been published in IEEE Transactions on Image Processing (TIP).
 
 
 <img src='img/overview.png' align="center" width=666 alt="Text alternative when image is not available">
@@ -53,15 +53,16 @@ Our [DASGIL-FD results](https://www.visuallocalization.net/details/15756/) and [
 If you use this code in your own work, please cite:
 
 H. Hu, Zhijian Qiao, M. Cheng, Z. Liu and H. Wang
-”[DASGIL: Domain Adaptation for Semantic and Geometric-aware Image-based Localization](https://arxiv.org/pdf/2010.00573.pdf)”,  
+”[DASGIL: Domain Adaptation for Semantic and Geometric-aware Image-based Localization](https://ieeexplore.ieee.org/document/9296559)”,  
 
 ```
-@misc{hu2020dasgil,
-      title={DASGIL: Domain Adaptation for Semantic and Geometric-aware Image-based Localization}, 
-      author={Hanjiang Hu and Ming Cheng and Zhe Liu and Hesheng Wang},
-      year={2020},
-      eprint={2010.00573},
-      archivePrefix={arXiv},
-      primaryClass={cs.CV}
-}
+@ARTICLE{hu2020dasgil,
+  author={H. {Hu} and Z. {Qiao} and M. {Cheng} and Z. {Liu} and H. {Wang}},
+  journal={IEEE Transactions on Image Processing}, 
+  title={DASGIL: Domain Adaptation for Semantic and Geometric-Aware Image-Based Localization}, 
+  year={2021},
+  volume={30},
+  number={},
+  pages={1342-1353},
+  doi={10.1109/TIP.2020.3043875}}
 ```
